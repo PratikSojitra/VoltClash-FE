@@ -1,5 +1,3 @@
-@AGENTS.md
-
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "graph": "graphify .",
+    "graph:update": "graphify update .",
+    "graph:query": "graphify query"
   },
   "dependencies": {
     "clsx": "^2.1.1",
