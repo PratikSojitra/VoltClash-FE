@@ -3,8 +3,45 @@
 import { Zap, ArrowLeft, ShieldCheck, Gamepad2, Info } from "lucide-react";
 import Link from "next/link";
 import { Button, Input } from "@/components/ui";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+import api from "@/lib/api";
 
 export default function SignupPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+
+    try {
+      await api.post("/auth/register", { username, password });
+
+      setSuccess("Account created successfully! Redirecting to login...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message;
+      setError(
+        Array.isArray(errMsg)
+          ? errMsg.join(", ")
+          : errMsg || err.message || "An error occurred during signup"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left Side - Visual / Info */}
@@ -74,13 +111,38 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="First Name" placeholder="John" required />
-              <Input label="Last Name" placeholder="Doe" required />
-            </div>
-            <Input label="Email Address" type="email" placeholder="name@example.com" required />
-            <Input label="Password" type="password" placeholder="••••••••" required />
+          <form className="space-y-5" onSubmit={handleSignup}>
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3.5 rounded-xl text-sm font-medium flex items-center gap-2 animate-pulse">
+                <Zap className="w-4 h-4 text-red-500 fill-red-500" />
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-3.5 rounded-xl text-sm font-medium flex items-center gap-2">
+                <Zap className="w-4 h-4 text-emerald-500 fill-emerald-500 animate-bounce" />
+                {success}
+              </div>
+            )}
+
+            <Input
+              label="Username"
+              type="text"
+              placeholder="e.g. clasher123"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            
+            <Input
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
             
             <div className="flex items-start gap-3 px-1 pt-2">
               <input type="checkbox" className="mt-1 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/20" id="terms" required />
@@ -89,7 +151,9 @@ export default function SignupPage() {
               </label>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">Create Account</Button>
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Creating Account..." : "Create Account"}
+            </Button>
           </form>
 
           <p className="text-center text-sm text-slate-500">

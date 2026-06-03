@@ -675,3 +675,235 @@ export function getInstanceCount(item: ItemTemplate, thLevel: number): number {
 
   return 1;
 }
+
+// ============================================================
+// ID → Name Mapping (matches defenses.json id fields)
+// Used by parseVillageJson to resolve numeric IDs from raw
+// game client dumps to human-readable building/troop names.
+// ============================================================
+const BUILDING_ID_MAP: Record<number, string> = {
+  // These IDs match the backend import.service.ts mapping (ground truth from CoC internal IDs)
+  1000000: "Cannon",
+  1000001: "Town Hall",
+  1000002: "Archer Tower",
+  1000003: "Mortar",
+  1000004: "Air Defense",
+  1000005: "Wizard Tower",
+  1000006: "Air Sweeper",
+  1000007: "Hidden Tesla",
+  1000008: "Laboratory",
+  1000009: "Spell Factory",
+  1000011: "Gold Mine",
+  1000012: "Elixir Collector",
+  1000013: "Gold Storage",
+  1000014: "Elixir Storage",
+  1000015: "Barracks",
+  1000019: "Clan Castle",
+  1000020: "Dark Elixir Storage",
+  1000021: "Dark Elixir Drill",
+  1000023: "Army Camp",
+  1000024: "Spell Factory",
+  1000026: "Dark Barracks",
+  1000027: "Dark Spell Factory",
+  1000028: "Eagle Artillery",
+  1000029: "Scattershot",
+  1000031: "Monolith",
+  1000032: "Ricochet Cannon",
+  1000059: "Multi-Archer Tower",
+  1000067: "Spell Tower",
+  1000068: "Blacksmith",
+  1000071: "Workshop",
+  1000072: "Pet House",
+  // Bomb Tower, X-Bow, Inferno (common game client IDs)
+  1000016: "Bomb Tower",
+  1000017: "X-Bow",
+  1000018: "Inferno Tower",
+  // Traps (from game client)
+  1200000: "Bomb",
+  1200001: "Spring Trap",
+  1200002: "Air Bomb",
+  1200003: "Giant Bomb",
+  1200004: "Seeking Air Mine",
+  1200005: "Skeleton Trap",
+  1200006: "Tornado Trap",
+};
+
+
+const TROOP_ID_MAP: Record<number, string> = {
+  4000000: "Barbarian",
+  4000001: "Archer",
+  4000002: "Goblin",
+  4000003: "Giant",
+  4000004: "Wall Breaker",
+  4000005: "Balloon",
+  4000006: "Wizard",
+  4000007: "Healer",
+  4000008: "Dragon",
+  4000009: "P.E.K.K.A",
+  4000010: "Minion",
+  4000011: "Hog Rider",
+  4000012: "Valkyrie",
+  4000013: "Golem",
+  4000015: "Witch",
+  4000017: "Lava Hound",
+  4000022: "Bowler",
+  4000023: "Baby Dragon",
+  4000024: "Miner",
+  4000053: "Yeti",
+  4000059: "Electro Dragon",
+  4000065: "Dragon Rider",
+  4000072: "Electro Titan",
+  4000089: "Root Rider",
+  4000115: "Thrower",
+  // Siege Machines
+  4000051: "Wall Wrecker",
+  4000052: "Battle Blimp",
+  4000062: "Stone Slammer",
+  4000075: "Siege Barracks",
+  4000087: "Log Launcher",
+  4000091: "Flame Flinger",
+  4000092: "Battle Drill",
+};
+
+const SPELL_ID_MAP: Record<number, string> = {
+  26000000: "Lightning Spell",
+  26000001: "Healing Spell",
+  26000002: "Rage Spell",
+  26000003: "Jump Spell",
+  26000005: "Freeze Spell",
+  26000009: "Poison Spell",
+  26000010: "Earthquake Spell",
+  26000011: "Haste Spell",
+  26000016: "Clone Spell",
+  26000017: "Skeleton Spell",
+  26000035: "Invisibility Spell",
+  26000053: "Recall Spell",
+  26000054: "Revive Spell",
+};
+
+const HERO_ID_MAP: Record<number, string> = {
+  28000000: "Barbarian King",
+  28000001: "Archer Queen",
+  28000002: "Grand Warden",
+  28000004: "Royal Champion",
+  28000006: "Minion Prince",
+  28000007: "Dragon Duke",
+};
+
+const PET_ID_MAP: Record<number, string> = {
+  18000000: "L.A.S.S.I",
+  18000001: "Electro Owl",
+  18000002: "Mighty Yak",
+  18000003: "Unicorn",
+  18000004: "Frosty",
+  18000005: "Diggy",
+  18000006: "Poison Lizard",
+  18000007: "Phoenix",
+  18000008: "Spirit Fox",
+  18000009: "Angry Jelly",
+};
+
+// Try to resolve a building ID to a name
+function resolveBuildingId(id: number): string | null {
+  return BUILDING_ID_MAP[id] || null;
+}
+
+export interface ParsedVillageItem {
+  name: string;
+  level: number;
+  village: "home" | "builder";
+  category: "building" | "troop" | "spell" | "hero" | "pet";
+}
+
+/**
+ * Parse a raw village JSON (from game client dump or Supercell API)
+ * into a normalized list of named items with levels.
+ *
+ * Handles:
+ *   - { data: <numericId>, lvl: <n> }   (game client format)
+ *   - { name: <string>, level: <n> }     (Supercell API / standard format)
+ */
+export function parseVillageJson(raw: any): {
+  playerTag: string | null;
+  name: string | null;
+  townHallLevel: number;
+  buildings: ParsedVillageItem[];
+  troops: ParsedVillageItem[];
+  spells: ParsedVillageItem[];
+  heroes: ParsedVillageItem[];
+  pets: ParsedVillageItem[];
+} {
+  const playerTag = raw.playerTag || raw.tag || null;
+  const name = raw.name || null;
+  let townHallLevel = parseInt(raw.townhallLevel || raw.townHallLevel || "1", 10);
+
+  const buildings: ParsedVillageItem[] = [];
+  const troops: ParsedVillageItem[] = [];
+  const spells: ParsedVillageItem[] = [];
+  const heroes: ParsedVillageItem[] = [];
+  const pets: ParsedVillageItem[] = [];
+
+  // --- Buildings ---
+  for (const b of raw.buildings || []) {
+    // Determine village
+    const village: "home" | "builder" = b.village === "builderBase" ? "builder" : "home";
+
+    // Resolve name
+    let bName: string | null = b.name || null;
+    if (!bName && b.data) bName = resolveBuildingId(b.data);
+    if (!bName) continue; // Skip unmapped items
+
+    // Skip Walls and Town Hall (TH level comes from root field, Walls not tracked)
+    if (bName === "Walls" || bName === "Town Hall") continue;
+
+    const level = parseInt(b.level || b.lvl || "1", 10);
+    buildings.push({ name: bName, level, village, category: "building" });
+  }
+
+  // Detect TH level from buildings if not in root
+  if (townHallLevel === 1) {
+    const thEntry = buildings.find((b) => b.name === "Town Hall");
+    if (thEntry) townHallLevel = thEntry.level;
+  }
+
+  // --- Troops ---
+  for (const t of raw.troops || raw.units || []) {
+    const village: "home" | "builder" = t.village === "builderBase" ? "builder" : "home";
+    let tName: string | null = t.name || null;
+    if (!tName && t.data) tName = TROOP_ID_MAP[t.data] || null;
+    if (!tName) continue;
+    const level = parseInt(t.level || t.lvl || "1", 10);
+    troops.push({ name: tName, level, village, category: "troop" });
+  }
+
+  // --- Spells ---
+  for (const s of raw.spells || []) {
+    const village: "home" | "builder" = s.village === "builderBase" ? "builder" : "home";
+    let sName: string | null = s.name || null;
+    if (!sName && s.data) sName = SPELL_ID_MAP[s.data] || null;
+    if (!sName) continue;
+    const level = parseInt(s.level || s.lvl || "1", 10);
+    spells.push({ name: sName, level, village, category: "spell" });
+  }
+
+  // --- Heroes ---
+  for (const h of raw.heroes || []) {
+    const village: "home" | "builder" = h.village === "builderBase" ? "builder" : "home";
+    let hName: string | null = h.name || null;
+    if (!hName && h.data) hName = HERO_ID_MAP[h.data] || null;
+    if (!hName) continue;
+    const level = parseInt(h.level || h.lvl || "1", 10);
+    heroes.push({ name: hName, level, village, category: "hero" });
+  }
+
+  // --- Pets / Hero Equipment (sometimes mixed into heroes in API) ---
+  for (const p of raw.heroEquipment || raw.pets || []) {
+    let pName: string | null = p.name || null;
+    if (!pName && p.data) pName = PET_ID_MAP[p.data] || null;
+    if (!pName) continue;
+    const level = parseInt(p.level || p.lvl || "1", 10);
+    pets.push({ name: pName, level, village: "home", category: "pet" });
+  }
+
+  return { playerTag, name, townHallLevel, buildings, troops, spells, heroes, pets };
+}

@@ -3,8 +3,40 @@
 import { Zap, ArrowLeft, Globe } from "lucide-react";
 import Link from "next/link";
 import { Button, Input } from "@/components/ui";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+import api from "@/lib/api";
 
 export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await api.post("/auth/login", { username, password });
+      const data = res.data;
+
+      // Save credentials in session storage / local storage
+      localStorage.setItem("voltclash_access_token", data.access_token);
+      localStorage.setItem("voltclash_user", JSON.stringify(data.user));
+
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "An error occurred during login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left Side - Form */}
@@ -31,16 +63,40 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-            <Input label="Email Address" type="email" placeholder="name@example.com" required />
+          <form className="space-y-5" onSubmit={handleLogin}>
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3.5 rounded-xl text-sm font-medium flex items-center gap-2 animate-pulse">
+                <Zap className="w-4 h-4 text-red-500 fill-red-500" />
+                {error}
+              </div>
+            )}
+
+            <Input
+              label="Username"
+              type="text"
+              placeholder="e.g. clasher123"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            
             <div className="space-y-1.5">
               <div className="flex items-center justify-between px-1">
                 <label className="text-sm font-medium text-slate-400">Password</label>
                 <Link href="#" className="text-xs text-primary hover:underline">Forgot password?</Link>
               </div>
-              <Input type="password" placeholder="••••••••" required />
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
-            <Button type="submit" className="w-full" size="lg">Sign In</Button>
+
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Signing In..." : "Sign In"}
+            </Button>
           </form>
 
           <div className="relative">
@@ -82,7 +138,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h3 className="text-3xl font-bold italic text-gradient uppercase tracking-tight">"Efficiency is the ultimate weapon."</h3>
-          <p className="text-slate-400 text-lg leading-relaxed">
+          <p className="text-slate-400 text-lg leading-relaxed leading-relaxed">
             VoltClash helps you optimize every builder second, ensuring your village reaches its full potential faster than ever before.
           </p>
         </div>
