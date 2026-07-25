@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Upload
 } from "lucide-react";
+import { Tooltip } from "@/components/ui";
 
 
 
@@ -93,11 +94,15 @@ export default function OverviewTab({
                 <div className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
                   <span>Day: 12</span>
                   <span className="text-green-500 font-bold">✔</span>
-                  <span className="text-xs font-semibold bg-muted border border-border px-1.5 py-0.5 rounded cursor-help hover:bg-muted/80 text-foreground" title="Upgrades active since last backup sync">i</span>
+                  <Tooltip content="Upgrades active since last backup sync">
+                    <span className="text-xs font-semibold bg-muted border border-border px-1.5 py-0.5 rounded cursor-help hover:bg-muted/80 text-foreground">i</span>
+                  </Tooltip>
                 </div>
                 <div className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
                   <span>Completion:</span>
-                  <span className="text-xs font-semibold bg-muted border border-border px-1.5 py-0.5 rounded cursor-help hover:bg-muted/80 text-foreground" title="Overall structural and laboratory completion status based on levels maxed.">i</span>
+                  <Tooltip content="Overall structural and laboratory completion status based on levels maxed.">
+                    <span className="text-xs font-semibold bg-muted border border-border px-1.5 py-0.5 rounded cursor-help hover:bg-muted/80 text-foreground">i</span>
+                  </Tooltip>
                 </div>
               </div>
             </div>
@@ -331,112 +336,6 @@ export default function OverviewTab({
 
       </div>
 
-      {/* Builder Board & Laboratory Active Slots */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Active Builders */}
-        <div className="lg:col-span-2 p-6 rounded-3xl bg-card border border-border flex flex-col justify-between animate-fade-in shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -z-10" />
-          
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold flex items-center gap-2 text-sm text-foreground">
-                <Hammer className="w-5 h-5 text-primary shrink-0" /> Active Village Builders
-              </h3>
-              <span className="text-xs font-bold text-primary px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 shrink-0">
-                {builders.length} / {maxBuilders} BUSY
-              </span>
-            </div>
-
-            {builders.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">ALL BUILDERS IDLE</p>
-                <p className="text-xs text-muted-foreground leading-normal max-w-md mx-auto">Your builders are resting. Assign defense structures, army camps, resources, or heroes to start upgrades.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 custom-scrollbar max-h-56 overflow-y-auto pr-1">
-                {builders.map((b) => {
-                  const pct = Math.round(((b.timeTotalSeconds - b.timeRemainingSeconds) / b.timeTotalSeconds) * 100);
-                  const timeStr = `${Math.floor(b.timeRemainingSeconds / 3600)}h ${Math.floor((b.timeRemainingSeconds % 3600) / 60)}m`;
-                  return (
-                    <div key={b.builderId} className="p-3.5 bg-muted/40 rounded-2xl border border-border/60 text-xs space-y-2.5 group relative hover:border-primary/25 transition-all shadow-sm">
-                      <div className="flex items-center justify-between font-semibold text-foreground">
-                        <span className="truncate max-w-[130px]">{b.itemName} Lvl {b.endLvl} {b.instanceIndex !== undefined && `(#${b.instanceIndex + 1})`}</span>
-                        <span className="font-mono text-primary font-bold">{timeStr}</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
-                        <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${pct}%` }} />
-                      </div>
-                      <div className="flex justify-between items-center pt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => onCancelUpgrade("builder", b.builderId)}
-                          className="text-red-500 hover:text-red-600 font-semibold text-xs uppercase tracking-wider"
-                        >
-                          Cancel Upgrade
-                        </button>
-                        <button
-                          onClick={() => onFinishUpgrade("builder", b.builderId)}
-                          className="text-accent hover:text-amber-600 font-semibold text-xs uppercase tracking-wider flex items-center gap-1"
-                        >
-                          Finish Now
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Laboratory Active Slot */}
-        <div className="p-6 rounded-3xl bg-card border border-border flex flex-col justify-between animate-fade-in shadow-sm relative overflow-hidden">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold flex items-center gap-2 text-sm text-foreground">
-                <FlaskConical className="w-5 h-5 text-purple-500 shrink-0" /> Laboratory Research
-              </h3>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-500 font-bold uppercase">
-                {labResearch ? "Busy" : "Idle"}
-              </span>
-            </div>
-
-            {labResearch ? (
-              <div className="p-4 bg-purple-500/5 rounded-2xl border border-purple-500/15 text-xs space-y-3 group hover:border-purple-500/25 transition-all">
-                <div className="flex items-center justify-between font-semibold text-foreground">
-                  <span className="truncate max-w-[130px] text-purple-500">{labResearch.itemName} Lvl {labResearch.endLvl}</span>
-                  <span className="font-mono text-purple-500 font-bold">
-                    {Math.floor(labResearch.timeRemainingSeconds / 3600)}h {Math.floor((labResearch.timeRemainingSeconds % 3600) / 60)}m
-                  </span>
-                </div>
-                <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-500 transition-all duration-1000" style={{ width: `${Math.round(((labResearch.timeTotalSeconds - labResearch.timeRemainingSeconds) / labResearch.timeTotalSeconds) * 100)}%` }} />
-                </div>
-                <div className="flex justify-between items-center pt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => onCancelUpgrade("lab", null)}
-                    className="text-red-500 hover:text-red-600 font-semibold text-xs uppercase tracking-wider"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => onFinishUpgrade("lab", null)}
-                    className="text-purple-500 hover:text-purple-600 font-semibold text-xs uppercase tracking-wider"
-                  >
-                    Finish Instantly
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">LAB RESEARCH IDLE</p>
-                <p className="text-xs text-muted-foreground leading-normal">Assign troop or spell research under the Laboratory tab to start.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-      </div>
 
       {/* Overview Core Tab Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">

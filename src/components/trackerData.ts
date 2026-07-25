@@ -2,7 +2,7 @@ import imageMap from "./imageMap.json";
 
 export interface ItemTemplate {
   name: string;
-  category: "Defenses" | "Army" | "Resources" | "Troops" | "Spells" | "Heroes" | "Equipment" | "Pets" | "Traps";
+  category: "Defenses" | "Army" | "Resources" | "Troops" | "Dark Troops" | "Sieges" | "Spells" | "Heroes" | "Equipment" | "Pets" | "Traps" | "Walls";
   maxLevel: number; // Max level at TH16 or BH10
   minTH: number; // TH/BH level required to unlock
   resource: "Gold" | "Elixir" | "Dark Elixir" | "Shiny Ore" | "Glowy Ore";
@@ -65,15 +65,28 @@ export const ITEM_TEMPLATES: ItemTemplate[] = [
   { name: "Dragon Rider", category: "Troops", maxLevel: 6, minTH: 13, resource: "Elixir" },
   { name: "Electro Titan", category: "Troops", maxLevel: 5, minTH: 14, resource: "Elixir" },
   { name: "Root Rider", category: "Troops", maxLevel: 4, minTH: 15, resource: "Elixir" },
-  { name: "Druid", category: "Troops", maxLevel: 6, minTH: 16, resource: "Dark Elixir" },
-  { name: "Minion", category: "Troops", maxLevel: 14, minTH: 7, resource: "Dark Elixir" },
-  { name: "Hog Rider", category: "Troops", maxLevel: 15, minTH: 7, resource: "Dark Elixir" },
-  { name: "Valkyrie", category: "Troops", maxLevel: 12, minTH: 8, resource: "Dark Elixir" },
-  { name: "Golem", category: "Troops", maxLevel: 15, minTH: 8, resource: "Dark Elixir" },
-  { name: "Witch", category: "Troops", maxLevel: 8, minTH: 9, resource: "Dark Elixir" },
-  { name: "Lava Hound", category: "Troops", maxLevel: 8, minTH: 9, resource: "Dark Elixir" },
-  { name: "Bowler", category: "Troops", maxLevel: 10, minTH: 10, resource: "Dark Elixir" },
-  { name: "Headhunter", category: "Troops", maxLevel: 4, minTH: 12, resource: "Dark Elixir" },
+
+  // === Home Village: Dark Troops ===
+  { name: "Minion", category: "Dark Troops", maxLevel: 14, minTH: 7, resource: "Dark Elixir" },
+  { name: "Hog Rider", category: "Dark Troops", maxLevel: 15, minTH: 7, resource: "Dark Elixir" },
+  { name: "Valkyrie", category: "Dark Troops", maxLevel: 12, minTH: 8, resource: "Dark Elixir" },
+  { name: "Golem", category: "Dark Troops", maxLevel: 15, minTH: 8, resource: "Dark Elixir" },
+  { name: "Witch", category: "Dark Troops", maxLevel: 8, minTH: 9, resource: "Dark Elixir" },
+  { name: "Lava Hound", category: "Dark Troops", maxLevel: 8, minTH: 9, resource: "Dark Elixir" },
+  { name: "Bowler", category: "Dark Troops", maxLevel: 10, minTH: 10, resource: "Dark Elixir" },
+  { name: "Ice Golem", category: "Dark Troops", maxLevel: 8, minTH: 11, resource: "Dark Elixir" },
+  { name: "Headhunter", category: "Dark Troops", maxLevel: 4, minTH: 12, resource: "Dark Elixir" },
+  { name: "Apprentice Warden", category: "Dark Troops", maxLevel: 5, minTH: 13, resource: "Dark Elixir" },
+  { name: "Druid", category: "Dark Troops", maxLevel: 6, minTH: 16, resource: "Dark Elixir" },
+
+  // === Home Village: Sieges ===
+  { name: "Wall Wrecker", category: "Sieges", maxLevel: 5, minTH: 12, resource: "Elixir" },
+  { name: "Battle Blimp", category: "Sieges", maxLevel: 5, minTH: 12, resource: "Elixir" },
+  { name: "Stone Slammer", category: "Sieges", maxLevel: 5, minTH: 12, resource: "Elixir" },
+  { name: "Siege Barracks", category: "Sieges", maxLevel: 5, minTH: 13, resource: "Elixir" },
+  { name: "Log Launcher", category: "Sieges", maxLevel: 5, minTH: 13, resource: "Elixir" },
+  { name: "Flame Flinger", category: "Sieges", maxLevel: 5, minTH: 14, resource: "Elixir" },
+  { name: "Battle Drill", category: "Sieges", maxLevel: 5, minTH: 15, resource: "Elixir" },
 
   // === Home Village: Spells ===
   { name: "Lightning Spell", category: "Spells", maxLevel: 11, minTH: 5, resource: "Elixir" },
@@ -137,6 +150,8 @@ export const ITEM_TEMPLATES: ItemTemplate[] = [
   { name: "Skeleton Trap", category: "Traps", maxLevel: 4, minTH: 8, resource: "Gold" },
   { name: "Tornado Trap", category: "Traps", maxLevel: 3, minTH: 11, resource: "Gold" },
 
+  // === Home Village: Walls ===
+  { name: "Wall", category: "Walls", maxLevel: 17, minTH: 1, resource: "Gold" },
 
   // ==========================================
   // === BUILDER BASE items (village: builder) ===
@@ -193,6 +208,9 @@ export const ITEM_TEMPLATES: ItemTemplate[] = [
   { name: "Mega Mine", category: "Traps", maxLevel: 10, minTH: 4, resource: "Gold", village: "builder" },
   { name: "Push Trap", category: "Traps", maxLevel: 10, minTH: 2, resource: "Gold", village: "builder" },
   { name: "Spring Trap", category: "Traps", maxLevel: 4, minTH: 3, resource: "Gold", village: "builder" },
+
+  // === Builder Base: Walls ===
+  { name: "Wall", category: "Walls", maxLevel: 10, minTH: 1, resource: "Gold", village: "builder" },
 ];
 
 /**

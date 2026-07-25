@@ -126,15 +126,19 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side - Visual / Placeholder */}
+      {/* Right Side - Visual Mockup */}
       <div className="hidden lg:flex items-center justify-center bg-card/50 border-l border-white/5 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20" />
         <div className="relative z-10 max-w-lg p-12 text-center space-y-6">
-          <div className="w-full aspect-video rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-600 mb-8 overflow-hidden">
-            {/* Placeholder Image */}
-            <div className="flex flex-col items-center gap-4">
-              <Zap className="w-16 h-16 opacity-20" />
-              <span className="text-sm font-medium opacity-50 uppercase tracking-widest">Village Preview Placeholder</span>
+          <div className="w-full aspect-video rounded-3xl bg-card border border-white/10 flex items-center justify-center mb-8 overflow-hidden shadow-2xl relative group">
+            {/* Dashboard Mockup Image */}
+            <img
+              src="/dashboard_preview.png"
+              alt="VoltClash Tracker Dashboard Preview"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+              <span className="text-xs font-bold text-white uppercase tracking-widest">Interactive Clash Upgrade Planner</span>
             </div>
           </div>
           <h3 className="text-3xl font-bold italic text-gradient uppercase tracking-tight">"Efficiency is the ultimate weapon."</h3>

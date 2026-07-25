@@ -42,8 +42,10 @@ import {
 // Modular Dashboard Components
 import Header from "@/components/dashboard/Header";
 import { LeftAdGutter, RightAdGutter } from "@/components/dashboard/Sidebar";
+import VillageSummaryBanner from "@/components/dashboard/VillageSummaryBanner";
 import OverviewTab from "@/components/dashboard/OverviewTab";
 import CategoryTab from "@/components/dashboard/CategoryTab";
+import PlannerTab from "@/components/dashboard/PlannerTab";
 import { UpgradeModal, SyncModal, JsonModal, PreviewModal } from "@/components/dashboard/Modals";
 
 export default function DashboardPage() {
@@ -440,7 +442,8 @@ export default function DashboardPage() {
       const data = await startUpgradeMutation.mutateAsync({
         playerTag: activeTag,
         itemName: item.name,
-        currentLevel: currentLvl
+        currentLevel: currentLvl,
+        village: item.village || "home"
       });
       showNotify(`Builder Slot #${data.builder_slot} assigned to upgrade ${item.name}!`, "success");
       setIsLevelEditOpen(false);
@@ -694,6 +697,7 @@ export default function DashboardPage() {
 
   // Home village tab definitions (flat, no icons — like the reference image)
   const homeCategories = [
+    { name: "Overview",    filter: [],                                 pending: 0 },
     { name: "Defenses",    filter: ["Defenses"],                      pending: countPending(["Defenses"]) },
     { name: "Traps",       filter: ["Traps"],                          pending: countPending(["Traps"]) },
     { name: "Army",        filter: ["Army"],                           pending: countPending(["Army"]) },
@@ -707,10 +711,12 @@ export default function DashboardPage() {
     { name: "Pets",        filter: ["Pets"],                           pending: countPending(["Pets"]) },
     { name: "Walls",       filter: ["Walls"],                          pending: 0 },
     { name: "Lab",         filter: ["Troops", "Spells", "Dark Troops", "Sieges"], pending: countPending(["Troops", "Spells", "Dark Troops", "Sieges"]) },
+    { name: "Planner",     filter: [],                                 pending: 0 },
   ];
 
   // Builder base tab definitions
   const builderCategories = [
+    { name: "Overview",  filter: [],             pending: 0 },
     { name: "Defenses",  filter: ["Defenses"],  pending: countPending(["Defenses"]) },
     { name: "Gear Ups",  filter: ["GearUps"],   pending: 0 },
     { name: "Traps",     filter: ["Traps"],      pending: countPending(["Traps"]) },
@@ -719,6 +725,7 @@ export default function DashboardPage() {
     { name: "Heroes",    filter: ["Heroes"],     pending: countPending(["Heroes"]) },
     { name: "Walls",     filter: ["Walls"],      pending: 0 },
     { name: "Lab",       filter: ["Troops"],     pending: countPending(["Troops"]) },
+    { name: "Planner",   filter: [],             pending: 0 },
   ];
 
   const categories = currentVillage === "builder" ? builderCategories : homeCategories;
@@ -831,68 +838,22 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* ── TH Overview card always visible above tabs ── */}
-              <OverviewTab
+              {/* ── Compact Top Banner (Replaces giant OverviewTab) ── */}
+              <VillageSummaryBanner
                 thLevel={thLevel}
-                builders={builders}
-                labResearch={labResearch}
-                maxBuilders={maxBuilders}
-                progressStats={progressStats}
-                suggestions={suggestions}
-                resourcesNeeded={resourcesNeeded}
-                onStartTHUpgrade={() => {
-                  if (thLevel < 16) {
-                    setThLevel(thLevel + 1);
-                    showNotify(`Town Hall upgraded locally to Level ${thLevel + 1}! Run tag sync to save to database.`, "info");
-                  } else {
-                    showNotify("Town Hall 16 is the maximum level in this version!", "success");
-                  }
+                currentVillage={currentVillage}
+                setCurrentVillage={(village) => {
+                  setCurrentVillage(village);
+                  setActiveTab("Overview");
+                  setSearchQuery("");
                 }}
-                onStartUpgrade={startUpgrade}
+                builders={builders}
+                maxBuilders={maxBuilders}
+                labResearch={labResearch}
+                getImageUrl={getImageUrl}
                 onCancelUpgrade={cancelUpgrade}
                 onFinishUpgrade={finishUpgradeNow}
-                onMassUpgradeStructures={() => {
-                  const updatedLevels = { ...levels };
-                  ITEM_TEMPLATES.forEach((item) => {
-                    const maxLvl = getMaxLevelForTH(item, thLevel);
-                    const count = getInstanceCount(item, thLevel);
-                    updatedLevels[item.name] = Array(count).fill(maxLvl);
-                  });
-                  setLevels(updatedLevels);
-                  showNotify(`All structures maxed for Town Hall ${thLevel} inside local memory!`, "success");
-                }}
-                onMassUpgradeWalls={() => showNotify(`All walls maxed for Town Hall ${thLevel}!`, "success")}
-                onOpenSync={() => setIsApiSyncOpen(true)}
-                onOpenJsonUpload={() => router.push("/dashboard/add-village")}
-                showNotify={showNotify}
-                getImageUrl={getImageUrl}
-                onBoostTimers={applyBuilderPotionBoost}
               />
-
-              {/* ── Builder Base toggle button ── */}
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    const next = currentVillage === "home" ? "builder" : "home";
-                    setCurrentVillage(next);
-                    setActiveTab(next === "builder" ? "Defenses" : "Defenses");
-                    setSearchQuery("");
-                  }}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all active:scale-95 flex items-center gap-2 shadow-sm ${
-                    currentVillage === "builder"
-                      ? "bg-blue-600 border-blue-500/40 text-white shadow-blue-600/15 hover:bg-blue-700"
-                      : "bg-card border-border text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <span>🏗️</span>
-                  {currentVillage === "builder" ? "Switch to Home Village" : "Switch to Builder Base"}
-                </button>
-                {currentVillage === "builder" && (
-                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full">
-                    Builder Base
-                  </span>
-                )}
-              </div>
 
               {/* ── Flat pill tab bar + search ── */}
               <div className="space-y-3">
@@ -940,26 +901,72 @@ export default function DashboardPage() {
               </div>
 
               {/* ── Category content ── */}
-              <CategoryTab
-                filteredItems={filteredItems}
-                levels={levels}
-                builders={builders}
-                labResearch={labResearch}
-                thLevel={thLevel}
-                showNotify={showNotify}
-                getMaxLevelForTH={getMaxLevelForTH}
-                getUpgradeCostAndTime={getUpgradeCostAndTime}
-                getImageUrl={getImageUrl}
-                getLevelsArray={getLevelsArray}
-                startUpgrade={startUpgrade}
-                cancelUpgrade={cancelUpgrade}
-                finishUpgradeNow={finishUpgradeNow}
-                onSelectItem={(item, instIdx) => {
-                  setSelectedItem(item);
-                  setSelectedInstanceIndex(instIdx);
-                  setIsLevelEditOpen(true);
-                }}
-              />
+              {activeTab === "Overview" ? (
+                <OverviewTab
+                  thLevel={thLevel}
+                  builders={builders}
+                  labResearch={labResearch}
+                  maxBuilders={maxBuilders}
+                  progressStats={progressStats}
+                  suggestions={suggestions}
+                  resourcesNeeded={resourcesNeeded}
+                  onStartTHUpgrade={() => {
+                    if (thLevel < 16) {
+                      setThLevel(thLevel + 1);
+                      showNotify(`Town Hall upgraded locally to Level ${thLevel + 1}! Run tag sync to save to database.`, "info");
+                    } else {
+                      showNotify("Town Hall 16 is the maximum level in this version!", "success");
+                    }
+                  }}
+                  onStartUpgrade={startUpgrade}
+                  onCancelUpgrade={cancelUpgrade}
+                  onFinishUpgrade={finishUpgradeNow}
+                  onMassUpgradeStructures={() => {
+                    const updatedLevels = { ...levels };
+                    ITEM_TEMPLATES.forEach((item) => {
+                      const maxLvl = getMaxLevelForTH(item, thLevel);
+                      const count = getInstanceCount(item, thLevel);
+                      updatedLevels[item.name] = Array(count).fill(maxLvl);
+                    });
+                    setLevels(updatedLevels);
+                    showNotify(`All structures maxed for Town Hall ${thLevel} inside local memory!`, "success");
+                  }}
+                  onMassUpgradeWalls={() => showNotify(`All walls maxed for Town Hall ${thLevel}!`, "success")}
+                  onOpenSync={() => setIsApiSyncOpen(true)}
+                  onOpenJsonUpload={() => router.push("/dashboard/add-village")}
+                  showNotify={showNotify}
+                  getImageUrl={getImageUrl}
+                  onBoostTimers={applyBuilderPotionBoost}
+                />
+              ) : activeTab === "Planner" ? (
+                <PlannerTab
+                  playerTag={activeTag}
+                  thLevel={thLevel}
+                  currentVillage={currentVillage}
+                  showNotify={showNotify}
+                />
+              ) : (
+                <CategoryTab
+                  filteredItems={filteredItems}
+                  levels={levels}
+                  builders={builders}
+                  labResearch={labResearch}
+                  thLevel={thLevel}
+                  showNotify={showNotify}
+                  getMaxLevelForTH={getMaxLevelForTH}
+                  getUpgradeCostAndTime={getUpgradeCostAndTime}
+                  getImageUrl={getImageUrl}
+                  getLevelsArray={getLevelsArray}
+                  startUpgrade={startUpgrade}
+                  cancelUpgrade={cancelUpgrade}
+                  finishUpgradeNow={finishUpgradeNow}
+                  onSelectItem={(item, instIdx) => {
+                    setSelectedItem(item);
+                    setSelectedInstanceIndex(instIdx);
+                    setIsLevelEditOpen(true);
+                  }}
+                />
+              )}
             </>
           )}
         </main>

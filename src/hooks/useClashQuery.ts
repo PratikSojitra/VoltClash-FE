@@ -66,7 +66,7 @@ export function useSyncPlayerTag() {
 export function useStartUpgrade() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { playerTag: string; itemName: string; currentLevel: number }) => {
+    mutationFn: async (payload: { playerTag: string; itemName: string; currentLevel: number; village?: string }) => {
       const res = await api.post("/upgrade/start", payload);
       return res.data;
     },
@@ -154,3 +154,74 @@ export function useUpdatePlayerLevels() {
     },
   });
 }
+
+// ----------------------------------------
+// Planner Hooks
+// ----------------------------------------
+
+export function usePlayerPlans(tag: string | null) {
+  return useQuery({
+    queryKey: ["playerPlans", tag],
+    queryFn: async () => {
+      if (!tag) return [];
+      const res = await api.get(`/planner/plans/${encodeURIComponent(tag)}`);
+      return res.data;
+    },
+    enabled: !!tag,
+  });
+}
+
+export function useAddPlan(playerTag: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      playerTag: string;
+      itemName: string;
+      fromLevel: number;
+      toLevel: number;
+      priority?: number;
+    }) => {
+      const res = await api.post("/planner/plan", payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["playerPlans", playerTag] });
+    },
+  });
+}
+
+export function useDeletePlan(playerTag: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/planner/plan/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["playerPlans", playerTag] });
+    },
+  });
+}
+
+export function useUpdatePlanPriority(playerTag: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { id: string; priority: number }) => {
+      const res = await api.patch(`/planner/plan/${payload.id}/priority`, { priority: payload.priority });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["playerPlans", playerTag] });
+    },
+  });
+}
+
+export function useCalculatePlanCost() {
+  return useMutation({
+    mutationFn: async (payload: { items: { itemName: string; fromLevel: number; toLevel: number }[] }) => {
+      const res = await api.post("/planner/calculate", payload);
+      return res.data;
+    },
+  });
+}
+

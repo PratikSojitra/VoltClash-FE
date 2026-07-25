@@ -1,6 +1,5 @@
-"use client";
-
-import { Clock, CheckCircle2, Hammer, AlertCircle, X } from "lucide-react";
+import { useState } from "react";
+import { Clock, CheckCircle2, Hammer, AlertCircle, X, Loader2 } from "lucide-react";
 
 interface CategoryTabProps {
   filteredItems: any[];
@@ -35,6 +34,45 @@ export default function CategoryTab({
   finishUpgradeNow,
   onSelectItem,
 }: CategoryTabProps) {
+  // Track async button clicks visually
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+
+  const handleStartUpgrade = async (item: any, instIdx: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const key = `${item.name}-${instIdx}-start`;
+    setLoadingActions(prev => ({ ...prev, [key]: true }));
+    try {
+      await startUpgrade(item, instIdx);
+    } catch {
+      // Errors handled by notification framework
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  const handleCancelUpgrade = async (type: "builder" | "lab", id: any, key: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLoadingActions(prev => ({ ...prev, [key]: true }));
+    try {
+      await cancelUpgrade(type, id);
+    } catch {
+      // Errors handled by notification framework
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  const handleFinishUpgradeNow = async (type: "builder" | "lab", id: any, key: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLoadingActions(prev => ({ ...prev, [key]: true }));
+    try {
+      await finishUpgradeNow(type, id);
+    } catch {
+      // Errors handled by notification framework
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [key]: false }));
+    }
+  };
 
   // Helper formatting functions
   const formatRemainingNum = (val: number) => {
@@ -57,6 +95,22 @@ export default function CategoryTab({
     if (h > 0) return `${h}h ${m}m`;
     return `${m}m`;
   };
+
+  if (filteredItems.length === 0) {
+    return (
+      <div className="text-center py-16 border border-border/80 rounded-3xl bg-card/30 max-w-xl mx-auto space-y-4 animate-fade-in">
+        <div className="w-12 h-12 bg-muted rounded-2xl border border-border/60 flex items-center justify-center mx-auto text-muted-foreground">
+          <AlertCircle className="w-6 h-6" />
+        </div>
+        <div>
+          <h4 className="font-bold text-xs uppercase tracking-wider text-foreground">No Items Found</h4>
+          <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto leading-relaxed">
+            There are no items matching this category or active search filter. Adjust your search parameters or check other tabs.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -140,6 +194,14 @@ export default function CategoryTab({
                 const isUpgrading = !!builderMatch || !!labMatch;
                 const remainingSec = builderMatch?.timeRemainingSeconds ?? labMatch?.timeRemainingSeconds ?? 0;
 
+                const startActionKey = `${item.name}-${instIdx}-start`;
+                const cancelActionKey = `${item.name}-${instIdx}-cancel`;
+                const finishActionKey = `${item.name}-${instIdx}-finish`;
+
+                const isStartPending = !!loadingActions[startActionKey];
+                const isCancelPending = !!loadingActions[cancelActionKey];
+                const isFinishPending = !!loadingActions[finishActionKey];
+
                 // Levels breakdown details
                 const remainingLevels = [];
                 let instTotalCost = 0;
@@ -209,14 +271,12 @@ export default function CategoryTab({
                             </div>
                           ) : (
                             <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startUpgrade(item, instIdx);
-                              }}
-                              className="w-8 h-8 bg-primary hover:opacity-90 active:scale-95 text-white font-semibold rounded-lg shadow-sm flex items-center justify-center transition-all text-xs shrink-0"
+                              onClick={(e) => handleStartUpgrade(item, instIdx, e)}
+                              disabled={isStartPending}
+                              className="w-8 h-8 bg-primary hover:opacity-90 active:scale-95 text-white font-semibold rounded-lg shadow-sm flex items-center justify-center transition-all text-xs shrink-0 disabled:opacity-50"
                               title={`Upgrade to Lvl ${currLvl + 1}`}
                             >
-                              ↑
+                              {isStartPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "↑"}
                             </button>
                           )}
                         </div>
@@ -237,14 +297,12 @@ export default function CategoryTab({
                         </div>
                       ) : (
                         <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startUpgrade(item, instIdx);
-                          }}
-                          className="w-8 h-8 bg-primary hover:opacity-90 active:scale-95 text-white font-semibold rounded-lg shadow-sm flex items-center justify-center transition-all text-sm shrink-0"
+                          onClick={(e) => handleStartUpgrade(item, instIdx, e)}
+                          disabled={isStartPending}
+                          className="w-8 h-8 bg-primary hover:opacity-90 active:scale-95 text-white font-semibold rounded-lg shadow-sm flex items-center justify-center transition-all text-sm shrink-0 disabled:opacity-50"
                           title={`Upgrade to Lvl ${currLvl + 1}`}
                         >
-                          ↑
+                          {isStartPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "↑"}
                         </button>
                       )}
                     </div>
@@ -267,21 +325,29 @@ export default function CategoryTab({
                             </span>
                             <div className="flex gap-1.5">
                               <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  cancelUpgrade(builderMatch ? "builder" : "lab", builderMatch ? builderMatch.builderId : null);
-                                }}
-                                className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-semibold text-[10px] uppercase tracking-wider rounded-lg border border-red-500/20 active:scale-95 transition-all"
+                                onClick={(e) => handleCancelUpgrade(
+                                  builderMatch ? "builder" : "lab", 
+                                  builderMatch ? builderMatch.builderId : null, 
+                                  cancelActionKey, 
+                                  e
+                                )}
+                                disabled={isCancelPending}
+                                className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-semibold text-[10px] uppercase tracking-wider rounded-lg border border-red-500/20 active:scale-95 transition-all flex items-center gap-1 disabled:opacity-50"
                               >
+                                {isCancelPending && <Loader2 className="w-3 h-3 animate-spin shrink-0" />}
                                 Cancel
                               </button>
                               <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  finishUpgradeNow(builderMatch ? "builder" : "lab", builderMatch ? builderMatch.builderId : null);
-                                }}
-                                className="px-2 py-1 bg-amber-500 hover:opacity-90 text-white font-semibold text-[10px] uppercase tracking-wider rounded-lg shadow-sm active:scale-95 transition-all"
+                                onClick={(e) => handleFinishUpgradeNow(
+                                  builderMatch ? "builder" : "lab", 
+                                  builderMatch ? builderMatch.builderId : null, 
+                                  finishActionKey, 
+                                  e
+                                )}
+                                disabled={isFinishPending}
+                                className="px-2 py-1 bg-amber-500 hover:opacity-90 text-white font-semibold text-[10px] uppercase tracking-wider rounded-lg shadow-sm active:scale-95 transition-all flex items-center gap-1 disabled:opacity-50"
                               >
+                                {isFinishPending && <Loader2 className="w-3 h-3 animate-spin shrink-0" />}
                                 Finish
                               </button>
                             </div>
