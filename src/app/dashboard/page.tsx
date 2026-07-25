@@ -15,6 +15,7 @@ import {
 
 
 import { useTheme } from "../providers";
+import AIAssistantTab from "@/components/dashboard/AIAssistantTab";
 import {
   ITEM_TEMPLATES,
   getMaxLevelForTH,
@@ -698,6 +699,7 @@ export default function DashboardPage() {
   // Home village tab definitions (flat, no icons — like the reference image)
   const homeCategories = [
     { name: "Overview",    filter: [],                                 pending: 0 },
+    { name: "VoltAI",      filter: [],                                 pending: 0 },
     { name: "Defenses",    filter: ["Defenses"],                      pending: countPending(["Defenses"]) },
     { name: "Traps",       filter: ["Traps"],                          pending: countPending(["Traps"]) },
     { name: "Army",        filter: ["Army"],                           pending: countPending(["Army"]) },
@@ -716,8 +718,9 @@ export default function DashboardPage() {
 
   // Builder base tab definitions
   const builderCategories = [
-    { name: "Overview",  filter: [],             pending: 0 },
-    { name: "Defenses",  filter: ["Defenses"],  pending: countPending(["Defenses"]) },
+    { name: "Overview",    filter: [],                                 pending: 0 },
+    { name: "VoltAI",      filter: [],                                 pending: 0 },
+    { name: "Defenses",    filter: ["Defenses"],                      pending: countPending(["Defenses"]) },
     { name: "Gear Ups",  filter: ["GearUps"],   pending: 0 },
     { name: "Traps",     filter: ["Traps"],      pending: countPending(["Traps"]) },
     { name: "Army",      filter: ["Army"],       pending: countPending(["Army"]) },
@@ -938,6 +941,8 @@ export default function DashboardPage() {
                   getImageUrl={getImageUrl}
                   onBoostTimers={applyBuilderPotionBoost}
                 />
+              ) : activeTab === "VoltAI" ? (
+                <AIAssistantTab playerTag={activeTag} />
               ) : activeTab === "Planner" ? (
                 <PlannerTab
                   playerTag={activeTag}

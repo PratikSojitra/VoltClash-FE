@@ -225,3 +225,20 @@ export function useCalculatePlanCost() {
   });
 }
 
+// ----------------------------------------
+// AI Chat
+// ----------------------------------------
+
+export function useAIChat(playerTag: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (messages: any[]) => {
+      const res = await api.post("/ai/chat", { playerTag, messages });
+      return res.data;
+    },
+    onSuccess: () => {
+      // Invalidate plans in case the AI added items
+      queryClient.invalidateQueries({ queryKey: ["playerPlans", playerTag] });
+    },
+  });
+}

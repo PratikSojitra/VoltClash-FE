@@ -9,7 +9,8 @@ import {
   LayoutDashboard,
   RefreshCw,
   Moon,
-  Sun
+  Sun,
+  Bot
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -70,7 +71,7 @@ export default function Home() {
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0">
                 The ultimate progress tracker for Clash of Clans. Live builder timers, 
-                automatic level detection, and time-to-max analytics.
+                automatic level detection, and your own dedicated VoltAI Upgrade Planner.
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <Link href="/dashboard" className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-xl shadow-primary/20">
@@ -115,6 +116,11 @@ export default function Home() {
                 icon: <LayoutDashboard className="w-6 h-6" />,
                 title: "Live Sync Engine",
                 desc: "Connect your player tag and see your village data update automatically with the Supercell API."
+              },
+              {
+                icon: <Bot className="w-6 h-6" />,
+                title: "VoltAI Assistant",
+                desc: "Chat with an intelligent assistant that analyzes your base and automatically adds optimal upgrades to your queue."
               },
               {
                 icon: <Clock className="w-6 h-6" />,
